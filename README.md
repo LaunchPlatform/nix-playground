@@ -17,6 +17,8 @@ np build
 # output the patch for applying on the production environments
 np patch > bugfix.patch
 
+# clean up the generated files
+np clean
 ```
 
 ## Why
