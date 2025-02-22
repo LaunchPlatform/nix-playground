@@ -4,6 +4,7 @@ import logging
 import os
 import pathlib
 import shutil
+import stat
 import subprocess
 import sys
 import typing
@@ -90,7 +91,15 @@ def main(env: Environment, pkg_name: str):
         )
 
     checkout_dir = pathlib.Path(DEFAULT_CHECKOUT_DIR)
-    checkout_dir.mkdir(parents=True, exist_ok=True)
     logger.info("Checking out source code from %s to %s", src, checkout_dir)
     shutil.copytree(src, str(checkout_dir))
+    checkout_dir.chmod(0o700)
+
+    logger.info("Change file permissions")
+    with os.scandir(checkout_dir) as it:
+        for entry in it:
+            file_stat = entry.stat()
+            pathlib.Path(entry.path).chmod(file_stat.st_mode | stat.S_IWRITE)
+
+    logger.info("Initialize git repo")
     pygit2.init_repository(DEFAULT_CHECKOUT_DIR)
