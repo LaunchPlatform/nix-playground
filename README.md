@@ -20,7 +20,7 @@ np patch > bugfix.patch
 ```
 
 ## Why
-Too often, we are afraid of digging into the upstream code and modifying and patching it because it's a very tedious process.
+Too often, we are afraid of digging into the upstream code, modifying and patching it because it's a very tedious process.
 Just getting the project to build could take hours.
 Thanks to [nixpkgs](https://nixos.org), building open-source software is much easier with a single source tree capable of building from the Linux kernel all the way to a simple utils command-line tool.
 With nix-playground, now you can easily check out source code from a package, modify it, test it out, and then create patches effortlessly.
