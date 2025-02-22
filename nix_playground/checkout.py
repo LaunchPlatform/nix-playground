@@ -1,3 +1,4 @@
+import itertools
 import json
 import logging
 import os
@@ -10,12 +11,8 @@ import sys
 import click
 import pygit2
 
+from . import constants
 from .cli import cli
-from .constants import DEFAULT_CHECKOUT_DIR
-from .constants import DER_LINK
-from .constants import PKG_LINK
-from .constants import PLAYGROUND_DIR
-from .constants import SRC_LINK
 from .environment import Environment
 from .environment import pass_env
 from .utils import switch_cwd
@@ -27,7 +24,7 @@ logger = logging.getLogger(__name__)
 @click.argument("PKG_NAME", type=str)
 @pass_env
 def main(env: Environment, pkg_name: str):
-    np_dir = pathlib.Path(PLAYGROUND_DIR)
+    np_dir = pathlib.Path(constants.PLAYGROUND_DIR)
     np_dir.mkdir(exist_ok=True)
 
     with switch_cwd(np_dir):
@@ -41,13 +38,13 @@ def main(env: Environment, pkg_name: str):
                     "--attr",
                     attr_name,
                     "--add-root",
-                    DER_LINK,
+                    constants.DER_LINK,
                 ]
             )
         except subprocess.CalledProcessError:
             logger.error("Failed to instantiate package %s", pkg_name)
             sys.exit(-1)
-        der_path = os.readlink(DER_LINK)
+        der_path = os.readlink(constants.DER_LINK)
         logger.info("Got package der path %s", der_path)
         der_payload = json.loads(
             subprocess.check_output(["nix", "derivation", "show", der_path])
@@ -62,7 +59,7 @@ def main(env: Environment, pkg_name: str):
                 "nix-store",
                 "--realise",
                 "--add-root",
-                PKG_LINK,
+                constants.PKG_LINK,
                 der_path,
             ]
         )
@@ -72,24 +69,25 @@ def main(env: Environment, pkg_name: str):
                 "nix-store",
                 "--realise",
                 "--add-root",
-                SRC_LINK,
+                constants.SRC_LINK,
                 src,
             ]
         )
 
-    checkout_dir = pathlib.Path(DEFAULT_CHECKOUT_DIR)
+    checkout_dir = pathlib.Path(constants.DEFAULT_CHECKOUT_DIR)
     logger.info("Checking out source code from %s to %s", src, checkout_dir)
     shutil.copytree(src, str(checkout_dir))
     checkout_dir.chmod(0o700)
 
     logger.info("Change file permissions")
-    with os.scandir(checkout_dir) as it:
-        for entry in it:
-            file_stat = entry.stat()
-            pathlib.Path(entry.path).chmod(file_stat.st_mode | stat.S_IWRITE)
+    for root, dirs, files in os.walk(checkout_dir):
+        for file_name in itertools.chain(files, dirs):
+            file_path = pathlib.Path(root) / file_name
+            file_stat = file_path.stat()
+            file_path.chmod(file_stat.st_mode | stat.S_IWRITE)
 
     logger.info("Initialize git repo")
-    repo = pygit2.init_repository(DEFAULT_CHECKOUT_DIR)
+    repo = pygit2.init_repository(constants.DEFAULT_CHECKOUT_DIR)
 
     with switch_cwd(checkout_dir):
         index = repo.index
@@ -108,5 +106,6 @@ def main(env: Environment, pkg_name: str):
         checkout_dir,
     )
     logger.info(
-        'Then, you can run "np build" to build the package with the changes in "checkout" folder, or you can run "np patches" to generate the patch for applying to the upstream'
+        'Then, you can run "np build" to build the package with the changes in "checkout" folder, '
+        'or you can run "np patches" to generate the patch for applying to the upstream'
     )
