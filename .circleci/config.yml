@@ -25,6 +25,11 @@ jobs:
     steps:
       - checkout
       - run:
+          name: Install deps
+          command: |
+            curl -LsSf https://astral.sh/uv/install.sh | sh
+            uv sync
+      - run:
           name: Build
           command: uv build
       - run:
