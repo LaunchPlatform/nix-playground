@@ -62,3 +62,10 @@ with import <nixpkgs> {};
 
 1. Get the cached diff with git for the `checkout` folder and output the patch file to `.nix-playground/checkout.patch`
 2. Run `nix-build --expr` with patch file applied to the target package
+
+## Roadmap
+
+- Add automatic tests
+- Implement `np shell` (like `nix-shell` but with the patches applied)
+- Support patching nested dependency package
+- Rewrite it with Rust? 🤔
