@@ -6,7 +6,8 @@ The nix-playground is a command line tool that makes applying patches to the nix
 
 ```bash
 # checkout libnvidia-container package source code locally
-np checkout nixpkgs#libnvidia-container
+# (in `nixpkgs` by default, a full pkg path with flake name can be provided like `nixpkgs#cowsay`)
+np checkout libnvidia-container
 
 # modify the code
 vim checkout/src/cli/main.c
