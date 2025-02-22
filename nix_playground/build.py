@@ -9,6 +9,7 @@ from . import constants
 from .cli import cli
 from .environment import Environment
 from .environment import pass_env
+from .utils import parse_pkg
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +19,7 @@ logger = logging.getLogger(__name__)
 def main(env: Environment):
     np_dir = pathlib.Path(constants.PLAYGROUND_DIR)
     pkg_name = (np_dir / constants.PKG_NAME).read_text()
-    package, attr_name = pkg_name.split("#", 1)
+    package = parse_pkg(pkg_name)
     logger.info("Building package %s", pkg_name)
 
     repo = pygit2.Repository(constants.DEFAULT_CHECKOUT_DIR)
@@ -33,8 +34,8 @@ def main(env: Environment):
             "nix-build",
             "--expr",
             textwrap.dedent(f"""\
-    with import <{package}> {{}};
-        {attr_name}.overrideAttrs (oldAttrs: {{
+    with import <{package.flake}> {{}};
+        {package.attr_name}.overrideAttrs (oldAttrs: {{
             patches = (lib.attrsets.attrByPath ["patches"] [] oldAttrs) ++ [{np_dir / constants.PATCH_FILE}];
         }})
     """),
