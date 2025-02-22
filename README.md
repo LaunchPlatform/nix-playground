@@ -11,7 +11,7 @@ np checkout nixpkgs#libnvidia-container
 # modify the code
 vim checkout/src/cli/main.c
 
-# build the package with changes you made in the checkout folder
+# build the package with changes you made in the checkout folder and try it out
 np build
 
 # output the patch for applying on the production environments
