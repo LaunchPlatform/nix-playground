@@ -80,6 +80,7 @@ with import <nixpkgs> {};
 4. Run `nix-store --realise` to realise the package and its source derivation with links in the `.nix-playground` folder.
 5. Deep copy the source (from env.src) folder to the current directory's `checkout` folder
 6. Init a git repo in the `checkout` folder and commit all the changes
+7. Apply patches from the package as commits in the `checkout` Git repo if there's any
 
 ### Build
 
