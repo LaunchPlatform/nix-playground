@@ -82,6 +82,11 @@ def main(env: Environment, pkg_name: str, checkout_to: str | None):
                 src,
             ]
         )
+        patch_files = []
+        patches = der_payload[der_path]["env"].get("patches", None)
+        if patches is not None:
+            patch_files = patches.split(" ")
+            logger.info("Found package patches %s", patch_files)
 
     logger.info("Checking out source code from %s to %s", src, checkout_dir)
     shutil.copytree(src, str(checkout_dir))
@@ -111,7 +116,14 @@ def main(env: Environment, pkg_name: str, checkout_to: str | None):
         tree = index.write_tree()
         parents = []
         repo.create_commit(ref, author, author, message, tree, parents)
-        # TODO: apply existing patches, each as a commit if there's any
+
+        if patch_files:
+            for patch_file in patch_files:
+                logger.info("Making a new commit from patch file %s", patch_file)
+                patch_file = pathlib.Path(patch_file)
+                diff = pygit2.Diff.parse_diff(patch_file.read_bytes())
+                print(diff)
+                repo.apply(diff)
 
     logger.info(
         'The checked out source code for "%s" is now available at "%s", you can go ahead and modify it',

@@ -16,15 +16,21 @@ def main(env: Environment):
     np_dir = ensure_np_dir()
 
     checkout_link = np_dir / constants.CHECKOUT_LINK
-    checkout_dir = checkout_link.readlink()
+    if checkout_link.exists():
+        checkout_dir = checkout_link.readlink()
+    else:
+        checkout_dir = None
 
     logger.info("Deleting checkout link %s", checkout_link)
     checkout_link.unlink(missing_ok=True)
 
-    logger.info("Deleting checkout dir %s", checkout_dir)
-    shutil.rmtree(checkout_dir)
+    if checkout_dir is not None:
+        logger.info("Deleting checkout dir %s", checkout_dir)
+        if checkout_dir.exists():
+            shutil.rmtree(checkout_dir)
 
     logger.info("Deleting nix-playground dir %s", np_dir)
-    shutil.rmtree(np_dir)
+    if np_dir.exists():
+        shutil.rmtree(np_dir)
 
     logger.info("done")
