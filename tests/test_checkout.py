@@ -1,0 +1,3 @@
+def test_checkout():
+    # TODO: when I have more time...
+    pass
