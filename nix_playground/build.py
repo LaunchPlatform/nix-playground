@@ -1,5 +1,4 @@
 import logging
-import os
 import pathlib
 import subprocess
 import textwrap
@@ -10,6 +9,7 @@ from . import constants
 from .cli import cli
 from .environment import Environment
 from .environment import pass_env
+from .utils import ensure_np_dir
 from .utils import parse_pkg
 
 logger = logging.getLogger(__name__)
@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 @cli.command(name="build", help="Build nix package with changes in the checkout folder")
 @pass_env
 def main(env: Environment):
-    np_dir = pathlib.Path(constants.PLAYGROUND_DIR)
+    np_dir = ensure_np_dir()
     checkout_dir = np_dir / constants.CHECKOUT_LINK
     path_file = np_dir / constants.PATCH_FILE
 
