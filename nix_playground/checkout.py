@@ -13,17 +13,15 @@ import click
 import pygit2
 
 from .cli import cli
+from .constants import DEFAULT_CHECKOUT_DIR
+from .constants import DER_LINK
+from .constants import PKG_LINK
+from .constants import PLAYGROUND_DIR
+from .constants import SRC_LINK
 from .environment import Environment
 from .environment import pass_env
 
 logger = logging.getLogger(__name__)
-
-
-PLAYGROUND_DIR = ".nix-playground"
-DER_LINK = "der"
-PKG_LINK = "pkg"
-SRC_LINK = "src"
-DEFAULT_CHECKOUT_DIR = "checkout"
 
 
 @contextlib.contextmanager
