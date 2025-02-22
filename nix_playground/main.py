@@ -1,4 +1,3 @@
-from . import format  # noqa
 from .checkout import main as checkout  # noqa
 from .cli import cli
 

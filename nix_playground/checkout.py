@@ -1,5 +1,7 @@
 import logging
 
+import click
+
 from .cli import cli
 from .environment import Environment
 from .environment import pass_env
