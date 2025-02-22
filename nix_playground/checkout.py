@@ -109,5 +109,5 @@ def main(env: Environment, pkg_name: str):
     )
     logger.info(
         'Then, you can run "np build" to build the package with the changes in "checkout" folder, '
-        'or you can run "np patches" to generate the patch for applying to the upstream'
+        'or you can run "np patch" to generate the patch for applying to the upstream'
     )
