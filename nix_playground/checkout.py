@@ -1,4 +1,3 @@
-import contextlib
 import json
 import logging
 import os
@@ -7,7 +6,6 @@ import shutil
 import stat
 import subprocess
 import sys
-import typing
 
 import click
 import pygit2
@@ -20,18 +18,9 @@ from .constants import PLAYGROUND_DIR
 from .constants import SRC_LINK
 from .environment import Environment
 from .environment import pass_env
+from .utils import switch_cwd
 
 logger = logging.getLogger(__name__)
-
-
-@contextlib.contextmanager
-def switch_cwd(cwd: str | pathlib.Path) -> typing.ContextManager:
-    current_cwd = os.getcwd()
-    try:
-        os.chdir(cwd)
-        yield
-    finally:
-        os.chdir(current_cwd)
 
 
 @cli.command(name="checkout", help="Checkout nixpkgs source content locally")
@@ -112,3 +101,12 @@ def main(env: Environment, pkg_name: str):
         tree = index.write_tree()
         parents = []
         repo.create_commit(ref, author, author, message, tree, parents)
+
+    logger.info(
+        "The checked out source code for %s is now available at %s, you can go ahead and modify it",
+        pkg_name,
+        checkout_dir,
+    )
+    logger.info(
+        'Then, you can run "np build" to build the package with the changes in "checkout" folder, or you can run "np patches" to generate the patch for applying to the upstream'
+    )
