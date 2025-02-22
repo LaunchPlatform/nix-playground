@@ -1,6 +1,6 @@
 # nix-playground
 
-The nix-playground is a tool that makes applying patches to the nixpkgs packages much easier.
+The nix-playground is a command line tool that makes applying patches to the nixpkgs packages much easier.
 
 ## Example
 
