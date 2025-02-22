@@ -23,11 +23,17 @@ logger = logging.getLogger(__name__)
 
 @cli.command(name="checkout", help="Checkout nixpkgs source content locally")
 @click.argument("PKG_NAME", type=str)
+@click.option("-c", "--checkout-to", type=click.Path(exists=False, writable=True))
 @pass_env
-def main(env: Environment, pkg_name: str):
+def main(env: Environment, pkg_name: str, checkout_to: str | None):
     np_dir = pathlib.Path(constants.PLAYGROUND_DIR)
     np_dir.mkdir(exist_ok=True)
     (np_dir / constants.PKG_NAME).write_text(pkg_name)
+
+    if checkout_to is None:
+        checkout_dir = pathlib.Path(constants.DEFAULT_CHECKOUT_DIR)
+    else:
+        checkout_dir = pathlib.Path(checkout_to)
 
     package = parse_pkg(pkg_name)
 
@@ -77,10 +83,11 @@ def main(env: Environment, pkg_name: str):
             ]
         )
 
-    checkout_dir = pathlib.Path(constants.DEFAULT_CHECKOUT_DIR)
     logger.info("Checking out source code from %s to %s", src, checkout_dir)
     shutil.copytree(src, str(checkout_dir))
     checkout_dir.chmod(0o700)
+    # make a link for the operation later
+    os.symlink(checkout_dir, np_dir / constants.CHECKOUT_LINK)
 
     logger.info("Change file permissions")
     for root, dirs, files in os.walk(checkout_dir):
