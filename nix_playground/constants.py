@@ -19,6 +19,9 @@ CHECKOUT_LINK = "checkout"
 # .nix-playground/checkout.patch
 PATCH_FILE = "checkout.patch"
 
+CHECKOUT_GIT_AUTHOR_NAME = "nix-playground"
+CHECKOUT_GIT_AUTHOR_EMAIL = "noreply@launchplatform.com"
+
 # the default checkout folder name
 DEFAULT_CHECKOUT_DIR = "checkout"
 # the default flake to use if not provided

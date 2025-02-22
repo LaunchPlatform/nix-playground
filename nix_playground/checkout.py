@@ -111,19 +111,38 @@ def main(env: Environment, pkg_name: str, checkout_to: str | None):
         index.add_all()
         index.write()
         ref = "HEAD"
-        author = pygit2.Signature("nix-playground", "noreply@launchplatform.com")
-        message = "Initial commit"
+        author = pygit2.Signature(
+            name=constants.CHECKOUT_GIT_AUTHOR_NAME,
+            email=constants.CHECKOUT_GIT_AUTHOR_EMAIL,
+        )
         tree = index.write_tree()
-        parents = []
-        repo.create_commit(ref, author, author, message, tree, parents)
+        current_commit = repo.create_commit(
+            reference_name=ref,
+            author=author,
+            committer=author,
+            message="Initial commit",
+            tree=tree,
+            parents=[],
+        )
 
         if patch_files:
             for patch_file in patch_files:
                 logger.info("Making a new commit from patch file %s", patch_file)
                 patch_file = pathlib.Path(patch_file)
                 diff = pygit2.Diff.parse_diff(patch_file.read_bytes())
-                print(diff)
                 repo.apply(diff)
+                index = repo.index
+                index.add_all()
+                index.write()
+                tree = index.write_tree()
+                current_commit = repo.create_commit(
+                    ref,
+                    author,
+                    author,
+                    message=f"Applying package patch file {patch_file}",
+                    tree=tree,
+                    parents=[current_commit],
+                )
 
     logger.info(
         'The checked out source code for "%s" is now available at "%s", you can go ahead and modify it',
