@@ -2,6 +2,23 @@
 
 The nix-playground is a tool that makes applying patches to the nixpkgs packages much easier.
 
+## Example
+
+```bash
+# checkout libnvidia-container package source code locally
+np checkout nixpkgs#libnvidia-container
+
+# modify the code
+vim checkout/src/cli/main.c
+
+# build the package with changes you made in the checkout folder
+np build
+
+# output the patch for applying on the production environments
+np patch > bugfix.patch
+
+```
+
 ## Why
 Too often, we are afraid of digging into the upstream code and modifying and patching it because it's a very tedious process.
 Just getting the project to build could take hours.
