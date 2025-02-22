@@ -3,11 +3,13 @@ import json
 import logging
 import os
 import pathlib
+import shutil
 import subprocess
 import sys
 import typing
 
 import click
+import pygit2
 
 from .cli import cli
 from .environment import Environment
@@ -19,6 +21,8 @@ logger = logging.getLogger(__name__)
 PLAYGROUND_DIR = ".nix-playground"
 DER_LINK = "der"
 PKG_LINK = "pkg"
+SRC_LINK = "src"
+DEFAULT_CHECKOUT_DIR = "checkout"
 
 
 @contextlib.contextmanager
@@ -74,3 +78,19 @@ def main(env: Environment, pkg_name: str):
                 der_path,
             ]
         )
+
+        subprocess.check_call(
+            [
+                "nix-store",
+                "--realise",
+                "--add-root",
+                SRC_LINK,
+                src,
+            ]
+        )
+
+    checkout_dir = pathlib.Path(DEFAULT_CHECKOUT_DIR)
+    checkout_dir.mkdir(parents=True, exist_ok=True)
+    logger.info("Checking out source code from %s to %s", src, checkout_dir)
+    shutil.copytree(src, str(checkout_dir))
+    pygit2.init_repository(DEFAULT_CHECKOUT_DIR)
