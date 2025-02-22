@@ -99,7 +99,7 @@ wheels = [
 
 [[package]]
 name = "nix-playground"
-version = "0.1.0"
+version = "0.1.2"
 source = { editable = "." }
 dependencies = [
     { name = "click" },
@@ -114,7 +114,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "click", specifier = ">=8.1.8" },
+    { name = "click", specifier = ">=8.1.7" },
     { name = "pygit2", specifier = ">=1.17.0" },
     { name = "rich", specifier = ">=13.9.4" },
 ]

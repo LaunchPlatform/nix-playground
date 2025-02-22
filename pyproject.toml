@@ -5,7 +5,7 @@ description = "Tool for patching nixpkgs package source code easily"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "click>=8.1.8",
+    "click>=8.1.7",
     "pygit2>=1.17.0",
     "rich>=13.9.4",
 ]
