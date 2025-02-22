@@ -1,5 +1,6 @@
 import json
 import logging
+import os
 import subprocess
 import sys
 
@@ -12,24 +13,32 @@ from .environment import pass_env
 logger = logging.getLogger(__name__)
 
 
+LOCAL_DER_LINK = ".pkg_der"
+
+
 @cli.command(name="checkout", help="Checkout nixpkgs source content locally")
 @click.argument("PKG_NAME", type=str)
 @pass_env
 def main(env: Environment, pkg_name: str):
-    logger.info("Checkout out nixpkgs %s ...", pkg_name)
+    logger.info("Checkout out package %s ...", pkg_name)
     try:
-        pkg_path = json.loads(
-            subprocess.check_output(["nix", "eval", "--json", pkg_name])
+        package, attr_name = pkg_name.split("#", 1)
+        subprocess.check_call(
+            [
+                "nix-instantiate",
+                f"<{package}>",
+                "--attr",
+                attr_name,
+                "--add-root",
+                LOCAL_DER_LINK,
+            ]
         )
     except subprocess.CalledProcessError:
-        logger.error("Failed to eval package %s", pkg_name)
+        logger.error("Failed to instantiate package %s", pkg_name)
         sys.exit(-1)
-    logger.info("Got package path %s", pkg_path)
-    pkg_der_path = (
-        subprocess.check_output(["nix-store", "--query", "--deriver", pkg_path])
-        .decode("utf8")
-        .strip()
+    der_path = os.readlink(LOCAL_DER_LINK)
+    logger.info("Got package der path %s", der_path)
+    der_payload = json.loads(
+        subprocess.check_output(["nix", "derivation", "show", der_path])
     )
-    logger.info("Got package der path %s", pkg_der_path)
-    der_payload = subprocess.check_output(["nix", "derivation", "show", pkg_der_path])
     logger.info("Got package der path %s", der_payload)
