@@ -102,4 +102,15 @@ def main(env: Environment, pkg_name: str):
             pathlib.Path(entry.path).chmod(file_stat.st_mode | stat.S_IWRITE)
 
     logger.info("Initialize git repo")
-    pygit2.init_repository(DEFAULT_CHECKOUT_DIR)
+    repo = pygit2.init_repository(DEFAULT_CHECKOUT_DIR)
+
+    with switch_cwd(checkout_dir):
+        index = repo.index
+        index.add_all()
+        index.write()
+        ref = "HEAD"
+        author = pygit2.Signature("nix-playground", "noreply@launchplatform.com")
+        message = "Initial commit"
+        tree = index.write_tree()
+        parents = []
+        repo.create_commit(ref, author, author, message, tree, parents)
