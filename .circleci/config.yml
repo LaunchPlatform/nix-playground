@@ -25,6 +25,9 @@ jobs:
     steps:
       - checkout
       - run:
+          name: Build
+          command: uv build
+      - run:
           name: Publish
           command: uv publish
 
