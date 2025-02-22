@@ -1,6 +1,6 @@
 [project]
 name = "nix-playground"
-version = "0.1.2"
+version = "0.1.3"
 description = "Tool for patching nixpkgs package source code easily"
 readme = "README.md"
 requires-python = ">=3.11"
