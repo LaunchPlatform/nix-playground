@@ -103,7 +103,7 @@ def main(env: Environment, pkg_name: str):
         repo.create_commit(ref, author, author, message, tree, parents)
 
     logger.info(
-        "The checked out source code for %s is now available at %s, you can go ahead and modify it",
+        'The checked out source code for "%s" is now available at "%s", you can go ahead and modify it',
         pkg_name,
         checkout_dir,
     )
