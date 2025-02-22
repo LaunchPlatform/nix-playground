@@ -15,6 +15,7 @@ from . import constants
 from .cli import cli
 from .environment import Environment
 from .environment import pass_env
+from .utils import parse_pkg
 from .utils import switch_cwd
 
 logger = logging.getLogger(__name__)
@@ -26,19 +27,19 @@ logger = logging.getLogger(__name__)
 def main(env: Environment, pkg_name: str):
     np_dir = pathlib.Path(constants.PLAYGROUND_DIR)
     np_dir.mkdir(exist_ok=True)
-
     (np_dir / constants.PKG_NAME).write_text(pkg_name)
+
+    package = parse_pkg(pkg_name)
 
     with switch_cwd(np_dir):
         logger.info("Checkout out package %s ...", pkg_name)
         try:
-            package, attr_name = pkg_name.split("#", 1)
             subprocess.check_call(
                 [
                     "nix-instantiate",
-                    f"<{package}>",
+                    f"<{package.flake}>",
                     "--attr",
-                    attr_name,
+                    package.attr_name,
                     "--add-root",
                     constants.DER_LINK,
                 ]
