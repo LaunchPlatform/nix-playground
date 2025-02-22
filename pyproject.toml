@@ -17,6 +17,7 @@ dev = [
 
 [project.scripts]
 np = "nix_playground.main:cli"
+nix-playground = "nix_playground.main:cli"
 
 [build-system]
 requires = ["hatchling"]
