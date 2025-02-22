@@ -101,6 +101,7 @@ def main(env: Environment, pkg_name: str):
         tree = index.write_tree()
         parents = []
         repo.create_commit(ref, author, author, message, tree, parents)
+        # TODO: apply existing patches, each as a commit if there's any
 
     logger.info(
         'The checked out source code for "%s" is now available at "%s", you can go ahead and modify it',
