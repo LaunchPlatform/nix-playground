@@ -87,7 +87,9 @@ def main(env: Environment, pkg_name: str, checkout_to: str | None):
     shutil.copytree(src, str(checkout_dir))
     checkout_dir.chmod(0o700)
     # make a link for the operation later
-    os.symlink(checkout_dir, np_dir / constants.CHECKOUT_LINK)
+    checkout_link = np_dir / constants.CHECKOUT_LINK
+    checkout_link.unlink(missing_ok=True)
+    checkout_link.absolute().symlink_to(checkout_dir.absolute())
 
     logger.info("Change file permissions")
     for root, dirs, files in os.walk(checkout_dir):
@@ -97,7 +99,7 @@ def main(env: Environment, pkg_name: str, checkout_to: str | None):
             file_path.chmod(file_stat.st_mode | stat.S_IWRITE)
 
     logger.info("Initialize git repo")
-    repo = pygit2.init_repository(constants.DEFAULT_CHECKOUT_DIR)
+    repo = pygit2.init_repository(checkout_dir)
 
     with switch_cwd(checkout_dir):
         index = repo.index
