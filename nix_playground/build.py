@@ -1,10 +1,8 @@
 import logging
-import os
 import pathlib
 import subprocess
 import textwrap
 
-import click
 import pygit2
 
 from . import constants
