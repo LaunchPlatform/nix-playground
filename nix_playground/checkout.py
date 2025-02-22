@@ -41,4 +41,6 @@ def main(env: Environment, pkg_name: str):
     der_payload = json.loads(
         subprocess.check_output(["nix", "derivation", "show", der_path])
     )
-    logger.info("Got package der path %s", der_payload)
+    logger.debug("Der payload: %r", der_payload)
+    src = der_payload[der_path]["env"].get("src")
+    logger.info("Source of the der %r", src)
