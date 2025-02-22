@@ -27,6 +27,8 @@ def main(env: Environment, pkg_name: str):
     np_dir = pathlib.Path(constants.PLAYGROUND_DIR)
     np_dir.mkdir(exist_ok=True)
 
+    (np_dir / constants.PKG_NAME).write_text(pkg_name)
+
     with switch_cwd(np_dir):
         logger.info("Checkout out package %s ...", pkg_name)
         try:
