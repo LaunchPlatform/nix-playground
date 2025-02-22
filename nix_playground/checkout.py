@@ -83,8 +83,8 @@ def main(env: Environment, pkg_name: str, checkout_to: str | None):
             ]
         )
         patch_files = []
-        patches = der_payload[der_path]["env"].get("patches", None)
-        if patches is not None:
+        patches = der_payload[der_path]["env"].get("patches", "").strip()
+        if patches:
             patch_files = patches.split(" ")
             logger.info("Found package patches %s", patch_files)
 
