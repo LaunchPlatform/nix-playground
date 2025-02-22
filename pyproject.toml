@@ -1,13 +1,18 @@
 [project]
 name = "nix-playground"
 version = "0.1.0"
-description = "Add your description here"
+description = "Tool for patching nixpkgs package source code easily"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     "click>=8.1.8",
     "pygit2>=1.17.0",
     "rich>=13.9.4",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3.4",
 ]
 
 [project.scripts]
