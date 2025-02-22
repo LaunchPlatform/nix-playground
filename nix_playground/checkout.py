@@ -117,12 +117,12 @@ def main(env: Environment, pkg_name: str, checkout_to: str | None):
         )
         tree = index.write_tree()
         current_commit = repo.create_commit(
-            reference_name=ref,
-            author=author,
-            committer=author,
-            message="Initial commit",
-            tree=tree,
-            parents=[],
+            ref,
+            author,
+            author,
+            "Initial commit",
+            tree,
+            [],
         )
 
         if patch_files:
@@ -139,9 +139,9 @@ def main(env: Environment, pkg_name: str, checkout_to: str | None):
                     ref,
                     author,
                     author,
-                    message=f"Applying package patch file {patch_file}",
-                    tree=tree,
-                    parents=[current_commit],
+                    f"Applying package patch file {patch_file}",
+                    tree,
+                    [current_commit],
                 )
 
     logger.info(
