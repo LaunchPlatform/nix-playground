@@ -9,7 +9,7 @@ orbs:
 jobs:
   test:
     docker:
-      - image: cimg/python:3.11.11
+      - image: nixos/nix:2.26.2
     steps:
       - checkout
       - nix/install
