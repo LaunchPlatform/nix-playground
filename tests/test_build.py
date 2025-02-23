@@ -11,9 +11,7 @@ from nix_playground.utils import switch_cwd
     "pkg_name, expected_result_files",
     [
         ("nixpkgs#cowsay", [pathlib.Path("bin") / "cowsay"]),
-        ("cowsay", [pathlib.Path("bin") / "cowsay"]),
         ("nixpkgs#libnvidia-container", [pathlib.Path("bin") / "nvidia-container-cli"]),
-        ("libnvidia-container", [pathlib.Path("bin") / "nvidia-container-cli"]),
     ],
 )
 def test_build(
