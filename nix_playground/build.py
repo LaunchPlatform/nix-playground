@@ -1,7 +1,7 @@
 import json
 import logging
+import re
 import subprocess
-import textwrap
 
 import pygit2
 
@@ -13,6 +13,8 @@ from .utils import ensure_np_dir
 from .utils import parse_pkg
 
 logger = logging.getLogger(__name__)
+
+INCORRECT_OUTPUT_REGEX = re.compile("has incorrect output '(.+?)', should be '(.+?)'")
 
 
 @cli.command(name="build", help="Build nix package with changes in the checkout folder")
@@ -71,16 +73,46 @@ def main(env: Environment):
     #   '/nix/store/p09fxxwkdj69hk4mgddk4r3nassiryzc-hello-2.12.1',
     #   should be '/nix/store/ja3hh4izqsjzq3rh8fxdqxw7vf56pw9m-hello-2.12.1'
     #
-    # So that we can get the correct output path
+    # So that we can get the correct output path. Ideally we should somehow use this rewrite der function in the nix
+    # C++ code:
+    # https://github.com/NixOS/nix/blob/d904921eecbc17662fef67e8162bd3c7d1a54ce0/src/libstore/derivations.cc#L1032-L1051
+    # or read the source code to find how the exact hashing algorithm, but maybe next time ...
+    # TODO: improve this hack
+    logger.info("Computing correct output pathes")
     proc = subprocess.run(
         ["nix", "derivation", "add"],
         input=json.dumps(der_payload).encode("utf8"),
         stderr=subprocess.PIPE,
+        check=False,
     )
     if proc.returncode == 0:
         raise ValueError("Does not expect this command to work")
-    proc.stderr
 
+    output_path_map = {
+        key: value
+        for key, value in INCORRECT_OUTPUT_REGEX.findall(proc.stderr.decode("utf8"))
+    }
+    logger.info("Got new output path map: %r", output_path_map)
+
+    # patch der..
+    outputs = der_payload["outputs"]
+    for out_key, out_value in outputs.items():
+        out_path = out_value["path"]
+        outputs[out_key] = dict(path=output_path_map.get(out_path, out_path))
+    env_out = der_payload["env"].get("out")
+    if env_out is not None and env_out:
+        output_paths = env_out.split(" ")
+        der_payload["env"]["out"] = " ".join(
+            map(lambda p: output_path_map.get(p, p), output_paths)
+        )
+
+    # this time with output patch patched, it should work
+    print(
+        subprocess.check_output(
+            ["nix", "derivation", "add"],
+            input=json.dumps(der_payload).encode("utf8"),
+        )
+    )
     # logger.debug("Running nix expr:\n%s", nix_expr)
     # subprocess.check_call(
     #     [
