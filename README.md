@@ -69,6 +69,16 @@ with import <nixpkgs> {};
     })
 ```
 
+### Checkout specific version
+
+One of the issues we encountered while using nix-playground was the version we patched locally is different from the one running on our production environment.
+To solve the problem, you can checkout specific version of nixpkgs or flake with the [flake reference URL schema](https://nix.dev/manual/nix/2.24/command-ref/new-cli/nix3-flake#examples).
+For example, to fix a bug of `libnvidia-container` in the `nixpkgs` repo at commit `11415c7ae8539d6292f2928317ee7a8410b28bb9`, you can run the following
+
+```bash
+np checkout github:NixOS/nixpkgs/11415c7ae8539d6292f2928317ee7a8410b28bb9#libnvidia-container
+```
+
 ## How it works
 
 ### Checkout
