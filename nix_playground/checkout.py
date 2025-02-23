@@ -1,6 +1,7 @@
 import itertools
 import json
 import logging
+import mimetypes
 import os
 import pathlib
 import shutil
@@ -15,7 +16,7 @@ from . import constants
 from .cli import cli
 from .environment import Environment
 from .environment import pass_env
-from .utils import parse_pkg
+from .utils import extract_tar
 from .utils import switch_cwd
 
 logger = logging.getLogger(__name__)
@@ -35,41 +36,48 @@ def main(env: Environment, pkg_name: str, checkout_to: str | None):
     else:
         checkout_dir = pathlib.Path(checkout_to)
 
-    package = parse_pkg(pkg_name)
-
+    logger.info("Checkout out package %s ...", pkg_name)
     with switch_cwd(np_dir):
-        logger.info("Checkout out package %s ...", pkg_name)
         try:
-            subprocess.check_call(
-                [
-                    "nix-instantiate",
-                    f"<{package.flake}>",
-                    "--attr",
-                    package.attr_name,
-                    "--add-root",
-                    constants.DER_LINK,
-                ]
+            drv_payloads = json.loads(
+                subprocess.check_output(
+                    [
+                        "nix",
+                        "derivation",
+                        "show",
+                        pkg_name,
+                    ]
+                )
             )
-        except subprocess.CalledProcessError:
-            logger.error("Failed to instantiate package %s", pkg_name)
-            sys.exit(-1)
-        der_path = os.readlink(constants.DER_LINK)
-        logger.info("Got package der path %s", der_path)
-        der_payload = json.loads(
-            subprocess.check_output(["nix", "derivation", "show", der_path])
-        )
-        logger.debug("Der payload: %r", der_payload)
-        src = der_payload[der_path]["env"].get("src")
-        logger.info("Source of the der %r", src)
+            logger.debug("Der payloads: %r", drv_payloads)
+            if len(drv_payloads) != 1:
+                raise ValueError("Expected only one der in the payload")
 
-        logger.info("Realizing der %s ...", der_path)
+            drv_json_file = pathlib.Path(constants.DRV_JSON_FILE)
+            with drv_json_file.open("wt") as fo:
+                json.dump(drv_payloads, fo)
+
+            drv_path = pathlib.Path(list(drv_payloads.keys())[0])
+            drv_payload = drv_payloads[str(drv_path)]
+        except subprocess.CalledProcessError:
+            logger.error("Failed to fetch package der info %s", pkg_name)
+            sys.exit(-1)
+        logger.info("Got package der path %s", drv_path)
+
+        src = drv_payload["env"].get("src")
+        logger.info("Source of the der %r", src)
+        if src is None:
+            logger.error("This package has no source to patch")
+            sys.exit(-1)
+
+        logger.info("Realizing der %s ...", drv_path)
         subprocess.check_call(
             [
                 "nix-store",
                 "--realise",
                 "--add-root",
                 constants.PKG_LINK,
-                der_path,
+                str(drv_path),
             ]
         )
 
@@ -83,7 +91,7 @@ def main(env: Environment, pkg_name: str, checkout_to: str | None):
             ]
         )
         patch_files = []
-        patches = der_payload[der_path]["env"].get("patches", "").strip()
+        patches = drv_payload["env"].get("patches", "").strip()
         if patches:
             patch_files = patches.split(" ")
             logger.info("Found package patches %s, realizing ...", patch_files)
@@ -101,8 +109,23 @@ def main(env: Environment, pkg_name: str, checkout_to: str | None):
                 )
 
     logger.info("Checking out source code from %s to %s", src, checkout_dir)
-    shutil.copytree(src, str(checkout_dir))
-    checkout_dir.chmod(0o700)
+    src_path = pathlib.Path(src)
+    if src_path.is_dir():
+        shutil.copytree(src, str(checkout_dir))
+        checkout_dir.chmod(0o700)
+    else:
+        mime_type = mimetypes.guess_type(src_path)
+        if mime_type == ("application/x-tar", "gzip"):
+            logger.info("Extract tar.gz file %s into %s", src_path, checkout_dir)
+            checkout_dir.mkdir(exist_ok=True)
+            with src_path.open("rb") as fo, switch_cwd(checkout_dir):
+                # TODO: is it always 1?
+                extract_tar(fo, strip_path_count=1)
+        # TODO: support other format
+        else:
+            logger.error("Unsupported src (%s) type, don't know how to handle", src)
+            sys.exit(-1)
+
     # make a link for the operation later
     checkout_link = np_dir / constants.CHECKOUT_LINK
     checkout_link.unlink(missing_ok=True)

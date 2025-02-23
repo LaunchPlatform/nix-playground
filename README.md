@@ -6,8 +6,7 @@ The nix-playground is a command line tool that makes applying patches to the nix
 
 ```bash
 # checkout libnvidia-container package source code locally
-# (in `nixpkgs` by default, a full pkg path with flake name can be provided like `nixpkgs#cowsay`)
-np checkout libnvidia-container
+np checkout nixpkgs#libnvidia-container
 
 # modify the code
 vim checkout/src/cli/main.c
@@ -75,17 +74,20 @@ with import <nixpkgs> {};
 ### Checkout
 
 1. Create `.nix-playground` folder in the current directory
-2. Call `nix-instantiate` to generate the derivation for the target package with a link at `.nix-playground/der`
+2. Call `nix derivation show` to output the derivation as a json file at `.nix-playground/drv.json`
 3. Get the `env.src` nix store path from the generated derivation 
 4. Run `nix-store --realise` to realise the package and its source derivation with links in the `.nix-playground` folder.
-5. Deep copy the source (from env.src) folder to the current directory's `checkout` folder
+5. Deep copy the source (from env.src) folder, or untar it to the current directory's `checkout` folder
 6. Init a git repo in the `checkout` folder and commit all the changes
 7. Apply patches from the package as commits in the `checkout` Git repo if there's any
 
 ### Build
 
 1. Get the cached diff with git for the `checkout` folder and output the patch file to `.nix-playground/checkout.patch`
-2. Run `nix-build --expr` with patch file applied to the target package
+2. Insert patch into the payload from `.nix-playground/drv.json`
+3. Call `nix derivation add` to add the derivation with patch added
+4. Read output patch does not match error, if there's any, patch the derivation payload and jump to step.3 and try again
+5. Realize the patched derivation and build
 
 ## Roadmap
 
