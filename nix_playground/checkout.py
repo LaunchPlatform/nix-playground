@@ -119,7 +119,8 @@ def main(env: Environment, pkg_name: str, checkout_to: str | None):
             logger.info("Extract tar.gz file %s into %s", src_path, checkout_dir)
             checkout_dir.mkdir(exist_ok=True)
             with src_path.open("rb") as fo, switch_cwd(checkout_dir):
-                extract_tar(fo)
+                # TODO: is it always 1?
+                extract_tar(fo, strip_path_count=1)
         # TODO: support other format
         else:
             logger.error("Unsupported src (%s) type, don't know how to handle", src)
