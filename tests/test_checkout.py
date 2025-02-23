@@ -1,5 +1,6 @@
 import pathlib
 
+import pytest
 from click.testing import CliRunner
 
 from nix_playground import constants
@@ -7,9 +8,17 @@ from nix_playground.main import cli
 from nix_playground.utils import switch_cwd
 
 
-def test_checkout(tmp_path: pathlib.Path, cli_runner: CliRunner):
+@pytest.mark.parametrize(
+    "pkg_name",
+    [
+        "nixpkgs#cowsay",
+        "cowsay",
+        "nixpkgs#libnvidia-container",
+        "libnvidia-container",
+    ],
+)
+def test_checkout(tmp_path: pathlib.Path, cli_runner: CliRunner, pkg_name: str):
     cli_runner.mix_stderr = False
-    pkg_name = "nixpkgs#cowsay"
     with switch_cwd(tmp_path):
         result = cli_runner.invoke(cli, ["checkout", pkg_name])
     assert result.exit_code == 0
