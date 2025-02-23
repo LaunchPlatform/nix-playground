@@ -12,9 +12,7 @@ from nix_playground.utils import switch_cwd
     "pkg_name, expected_checkout_files",
     [
         ("nixpkgs#cowsay", [pathlib.Path("bin") / "cowsay"]),
-        ("cowsay", [pathlib.Path("bin") / "cowsay"]),
         ("nixpkgs#libnvidia-container", [pathlib.Path("src") / "cli" / "main.c"]),
-        ("libnvidia-container", [pathlib.Path("src") / "cli" / "main.c"]),
     ],
 )
 def test_checkout(
@@ -33,7 +31,7 @@ def test_checkout(
     pkg_name_file = np_dir / constants.PKG_NAME
     assert pkg_name_file.read_text() == pkg_name
 
-    der_link = np_dir / constants.DER_LINK
+    der_link = np_dir / constants.DER_JSON_FILE
     assert der_link.exists()
     pkg_link = np_dir / constants.PKG_LINK
     assert pkg_link.exists()

@@ -17,7 +17,6 @@ from .cli import cli
 from .environment import Environment
 from .environment import pass_env
 from .utils import extract_tar
-from .utils import parse_pkg
 from .utils import switch_cwd
 
 logger = logging.getLogger(__name__)
@@ -50,15 +49,19 @@ def main(env: Environment, pkg_name: str, checkout_to: str | None):
                     ]
                 )
             )
-            der_path = list(der_payload.keys())[0]
-            # TODO: ideally should find a way to keep the derivation from gc?
+            if len(der_payload) != 1:
+                raise ValueError("Expected only one der in the payload")
+            der_path = pathlib.Path(list(der_payload.keys())[0])
+            der_json_file = pathlib.Path(constants.DER_JSON_FILE)
+            with der_json_file.open("wt") as fo:
+                json.dump(der_payload, fo)
         except subprocess.CalledProcessError:
             logger.error("Failed to fetch package der info %s", pkg_name)
             sys.exit(-1)
         logger.info("Got package der path %s", der_path)
 
         logger.debug("Der payload: %r", der_payload)
-        src = der_payload[der_path]["env"].get("src")
+        src = der_payload[str(der_path)]["env"].get("src")
         logger.info("Source of the der %r", src)
 
         logger.info("Realizing der %s ...", der_path)
@@ -68,7 +71,7 @@ def main(env: Environment, pkg_name: str, checkout_to: str | None):
                 "--realise",
                 "--add-root",
                 constants.PKG_LINK,
-                der_path,
+                str(der_path),
             ]
         )
 
@@ -82,7 +85,7 @@ def main(env: Environment, pkg_name: str, checkout_to: str | None):
             ]
         )
         patch_files = []
-        patches = der_payload[der_path]["env"].get("patches", "").strip()
+        patches = der_payload[str(der_path)]["env"].get("patches", "").strip()
         if patches:
             patch_files = patches.split(" ")
             logger.info("Found package patches %s, realizing ...", patch_files)

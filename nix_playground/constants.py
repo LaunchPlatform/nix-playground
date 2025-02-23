@@ -3,9 +3,9 @@ PLAYGROUND_DIR = ".nix-playground"
 # the filename of original checked out package name in the PLAYGROUND_DIR folder, like
 # .nix-playground/pkg_name
 PKG_NAME = "pkg_name"
-# the filename of link to nix der in the PLAYGROUND_DIR folder, like
-# .nix-playground/der
-DER_LINK = "der"
+# the filename of JSON dump from nix der file in the PLAYGROUND_DIR folder, like
+# .nix-playground/der.json
+DER_JSON_FILE = "der.json"
 # the filename of link to nix package in the PLAYGROUND_DIR folder, like
 # .nix-playground/pkg
 PKG_LINK = "pkg"
