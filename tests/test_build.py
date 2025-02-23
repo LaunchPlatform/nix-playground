@@ -3,7 +3,6 @@ import pathlib
 import pytest
 from click.testing import CliRunner
 
-from nix_playground import constants
 from nix_playground.main import cli
 from nix_playground.utils import switch_cwd
 
