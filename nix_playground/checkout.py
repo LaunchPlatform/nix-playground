@@ -39,7 +39,7 @@ def main(env: Environment, pkg_name: str, checkout_to: str | None):
     logger.info("Checkout out package %s ...", pkg_name)
     with switch_cwd(np_dir):
         try:
-            drv_payload = json.loads(
+            drv_payloads = json.loads(
                 subprocess.check_output(
                     [
                         "nix",
@@ -49,20 +49,26 @@ def main(env: Environment, pkg_name: str, checkout_to: str | None):
                     ]
                 )
             )
-            if len(drv_payload) != 1:
+            logger.debug("Der payloads: %r", drv_payloads)
+            if len(drv_payloads) != 1:
                 raise ValueError("Expected only one der in the payload")
-            drv_path = pathlib.Path(list(drv_payload.keys())[0])
+
             drv_json_file = pathlib.Path(constants.DRV_JSON_FILE)
             with drv_json_file.open("wt") as fo:
-                json.dump(drv_payload, fo)
+                json.dump(drv_payloads, fo)
+
+            drv_path = pathlib.Path(list(drv_payloads.keys())[0])
+            drv_payload = drv_payloads[str(drv_path)]
         except subprocess.CalledProcessError:
             logger.error("Failed to fetch package der info %s", pkg_name)
             sys.exit(-1)
         logger.info("Got package der path %s", drv_path)
 
-        logger.debug("Der payload: %r", drv_payload)
-        src = drv_payload[str(drv_path)]["env"].get("src")
+        src = drv_payload["env"].get("src")
         logger.info("Source of the der %r", src)
+        if src is None:
+            logger.error("This package has no source to patch")
+            sys.exit(-1)
 
         logger.info("Realizing der %s ...", drv_path)
         subprocess.check_call(
@@ -85,7 +91,7 @@ def main(env: Environment, pkg_name: str, checkout_to: str | None):
             ]
         )
         patch_files = []
-        patches = drv_payload[str(drv_path)]["env"].get("patches", "").strip()
+        patches = drv_payload["env"].get("patches", "").strip()
         if patches:
             patch_files = patches.split(" ")
             logger.info("Found package patches %s, realizing ...", patch_files)
