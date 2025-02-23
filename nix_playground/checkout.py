@@ -23,9 +23,19 @@ logger = logging.getLogger(__name__)
 
 @cli.command(name="checkout", help="Checkout nixpkgs source content locally")
 @click.argument("PKG_NAME", type=str)
+@click.option(
+    "-f",
+    "--flake",
+    is_flag=True,
+    help="Instead of building from traditional nix packages, treat the given PKG_NAME as "
+    '"<FLAKE_PATH>#<ATTR_PATH>". and build the package at ATTR_PATH under "outputs" '
+    "generated from the flake at FLAKE_PATH. "
+    'For example ".#my-pkg.x86_64-linux" will get "my-pkg.x86_64-linux" under "outputs" generated from'
+    'flake in the current folder "."',
+)
 @click.option("-c", "--checkout-to", type=click.Path(exists=False, writable=True))
 @pass_env
-def main(env: Environment, pkg_name: str, checkout_to: str | None):
+def main(env: Environment, pkg_name: str, flake: bool, checkout_to: str | None):
     np_dir = pathlib.Path(constants.PLAYGROUND_DIR)
     np_dir.mkdir(exist_ok=True)
     (np_dir / constants.PKG_NAME).write_text(pkg_name)
@@ -36,20 +46,45 @@ def main(env: Environment, pkg_name: str, checkout_to: str | None):
         checkout_dir = pathlib.Path(checkout_to)
 
     package = parse_pkg(pkg_name)
-
+    if flake:
+        # get the abs path outside np_dir
+        flake_path = pathlib.Path(package.flake).absolute()
     with switch_cwd(np_dir):
-        logger.info("Checkout out package %s ...", pkg_name)
         try:
-            subprocess.check_call(
-                [
-                    "nix-instantiate",
-                    f"<{package.flake}>",
-                    "--attr",
-                    package.attr_name,
-                    "--add-root",
-                    constants.DER_LINK,
-                ]
-            )
+            if not flake:
+                logger.info("Checkout out package %s ...", pkg_name)
+                subprocess.check_call(
+                    [
+                        "nix-instantiate",
+                        f"<{package.flake}>",
+                        "--attr",
+                        package.attr_name,
+                        "--add-root",
+                        constants.DER_LINK,
+                    ]
+                )
+            else:
+                logger.info("Checkout out flake package %s ...", pkg_name)
+                print(
+                    " ".join(
+                        [
+                            "nix-instantiate",
+                            "--expr",
+                            f'(builtins.getFlake "{flake_path}").outputs.{package.attr_name}',
+                            "--add-root",
+                            constants.DER_LINK,
+                        ]
+                    )
+                )
+                subprocess.check_call(
+                    [
+                        "nix-instantiate",
+                        "--expr",
+                        f'(builtins.getFlake "{flake_path}").outputs.{package.attr_name}',
+                        "--add-root",
+                        constants.DER_LINK,
+                    ]
+                )
         except subprocess.CalledProcessError:
             logger.error("Failed to instantiate package %s", pkg_name)
             sys.exit(-1)
