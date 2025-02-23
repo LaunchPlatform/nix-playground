@@ -18,6 +18,9 @@ CHECKOUT_LINK = "checkout"
 # the filename of generated patch file in PLAYGROUND_DIR folder, like
 # .nix-playground/checkout.patch
 PATCH_FILE = "checkout.patch"
+# the filename of package patch files folder in PLAYGROUND_DIR folder, like
+# .nix-playground/pkg-patches
+PKG_PATCHES_DIR = "pkg-patches"
 
 CHECKOUT_GIT_AUTHOR_NAME = "nix-playground"
 CHECKOUT_GIT_AUTHOR_EMAIL = "noreply@launchplatform.com"

@@ -86,7 +86,19 @@ def main(env: Environment, pkg_name: str, checkout_to: str | None):
         patches = der_payload[der_path]["env"].get("patches", "").strip()
         if patches:
             patch_files = patches.split(" ")
-            logger.info("Found package patches %s", patch_files)
+            logger.info("Found package patches %s, realizing ...", patch_files)
+            pkg_patches_dir = np_dir / constants.PKG_PATCHES_DIR
+            pkg_patches_dir.mkdir(exist_ok=True)
+            for index, patch_file in enumerate(patch_files):
+                subprocess.check_call(
+                    [
+                        "nix-store",
+                        "--realise",
+                        "--add-root",
+                        str(pkg_patches_dir / f"{index}.patch"),
+                        patch_file,
+                    ]
+                )
 
     logger.info("Checking out source code from %s to %s", src, checkout_dir)
     shutil.copytree(src, str(checkout_dir))
