@@ -89,8 +89,7 @@ with import <nixpkgs> {};
 
 ## Roadmap
 
-- Add automatic tests
-- Publish it to nixpkgs 
+- [Publish it to nixpkgs](https://github.com/NixOS/nixpkgs/pull/384171), waiting for review
 - Implement `np shell` (like `nix-shell` but with the patches applied)
 - Support patching nested dependency package
 - Rewrite it with Rust? 🤔
