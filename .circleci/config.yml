@@ -16,7 +16,7 @@ jobs:
           command: |
             # enable flake
             echo 'experimental-features = nix-command flakes' >> /etc/nix/nix.conf
-            nix profile install nixpkgs#python311 nicpkgs:uv
+            nix profile install nixpkgs#python311 nicpkgs#uv
             uv sync
       - run:
           name: Run test
