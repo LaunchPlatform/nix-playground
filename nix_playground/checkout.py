@@ -87,7 +87,7 @@ def main(env: Environment, pkg_name: str, checkout_to: str | None):
         if patches:
             patch_files = patches.split(" ")
             logger.info("Found package patches %s, realizing ...", patch_files)
-            pkg_patches_dir = np_dir / constants.PKG_PATCHES_DIR
+            pkg_patches_dir = pathlib.Path(constants.PKG_PATCHES_DIR)
             pkg_patches_dir.mkdir(exist_ok=True)
             for index, patch_file in enumerate(patch_files):
                 subprocess.check_call(

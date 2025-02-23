@@ -9,15 +9,20 @@ from nix_playground.utils import switch_cwd
 
 
 @pytest.mark.parametrize(
-    "pkg_name",
+    "pkg_name, expected_checkout_files",
     [
-        "nixpkgs#cowsay",
-        "cowsay",
-        "nixpkgs#libnvidia-container",
-        "libnvidia-container",
+        ("nixpkgs#cowsay", [pathlib.Path("bin") / "cowsay"]),
+        ("cowsay", [pathlib.Path("bin") / "cowsay"]),
+        ("nixpkgs#libnvidia-container", [pathlib.Path("src") / "cli" / "main.c"]),
+        ("libnvidia-container", [pathlib.Path("src") / "cli" / "main.c"]),
     ],
 )
-def test_checkout(tmp_path: pathlib.Path, cli_runner: CliRunner, pkg_name: str):
+def test_checkout(
+    tmp_path: pathlib.Path,
+    cli_runner: CliRunner,
+    pkg_name: str,
+    expected_checkout_files: list[pathlib],
+):
     cli_runner.mix_stderr = False
     with switch_cwd(tmp_path):
         result = cli_runner.invoke(cli, ["checkout", pkg_name])
@@ -38,8 +43,9 @@ def test_checkout(tmp_path: pathlib.Path, cli_runner: CliRunner, pkg_name: str):
     assert checkout_link.exists()
     assert checkout_link.readlink() == tmp_path / constants.DEFAULT_CHECKOUT_DIR
 
-    cowsay = checkout_link / "bin" / "cowsay"
-    assert cowsay.exists()
+    for expected_file in expected_checkout_files:
+        expected_file_path = checkout_link / expected_file
+        assert expected_file_path.exists()
 
 
 def test_checkout_to_dir(tmp_path: pathlib.Path, cli_runner: CliRunner):
