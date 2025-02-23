@@ -48,24 +48,24 @@ def main(env: Environment):
 
     logger.info("Building nix package with patch")
 
-    der_json_path = np_dir / constants.DER_JSON_FILE
-    with der_json_path.open("rb") as fo:
-        der_payloads = json.load(fo)
+    drv_json_path = np_dir / constants.DRV_JSON_FILE
+    with drv_json_path.open("rb") as fo:
+        drv_payloads = json.load(fo)
 
-    if len(der_payloads) != 1:
+    if len(drv_payloads) != 1:
         raise ValueError("Expected only one der in the payload")
 
-    der_path = list(der_payloads.keys())[0]
-    der_payload = der_payloads[der_path]
+    drv_path = list(drv_payloads.keys())[0]
+    drv_payload = drv_payloads[drv_path]
 
-    patches = der_payload["env"].get("patches", "")
+    patches = drv_payload["env"].get("patches", "")
     if patches:
         patches = patches.split(" ")
     else:
         patches = []
     patches.append(patch_store_path)
 
-    der_payload["env"]["patches"] = " ".join(patches)
+    drv_payload["env"]["patches"] = " ".join(patches)
 
     # This is a hack, we expect the `nix derivation add` command to return an error like this:
     #
@@ -81,7 +81,7 @@ def main(env: Environment):
     logger.info("Computing correct output pathes")
     proc = subprocess.run(
         ["nix", "derivation", "add"],
-        input=json.dumps(der_payload).encode("utf8"),
+        input=json.dumps(drv_payload).encode("utf8"),
         stderr=subprocess.PIPE,
         check=False,
     )
@@ -95,14 +95,14 @@ def main(env: Environment):
     logger.info("Got new output path map: %r", output_path_map)
 
     # patch der..
-    outputs = der_payload["outputs"]
+    outputs = drv_payload["outputs"]
     for out_key, out_value in outputs.items():
         out_path = out_value["path"]
         outputs[out_key] = dict(path=output_path_map.get(out_path, out_path))
-    env_out = der_payload["env"].get("out")
+    env_out = drv_payload["env"].get("out")
     if env_out is not None and env_out:
         output_paths = env_out.split(" ")
-        der_payload["env"]["out"] = " ".join(
+        drv_payload["env"]["out"] = " ".join(
             map(lambda p: output_path_map.get(p, p), output_paths)
         )
 
@@ -110,7 +110,7 @@ def main(env: Environment):
     print(
         subprocess.check_output(
             ["nix", "derivation", "add"],
-            input=json.dumps(der_payload).encode("utf8"),
+            input=json.dumps(drv_payload).encode("utf8"),
         )
     )
     # logger.debug("Running nix expr:\n%s", nix_expr)

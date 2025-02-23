@@ -31,8 +31,8 @@ def test_checkout(
     pkg_name_file = np_dir / constants.PKG_NAME
     assert pkg_name_file.read_text() == pkg_name
 
-    der_link = np_dir / constants.DER_JSON_FILE
-    assert der_link.exists()
+    drv_json_file = np_dir / constants.DRV_JSON_FILE
+    assert drv_json_file.exists()
     pkg_link = np_dir / constants.PKG_LINK
     assert pkg_link.exists()
     src_link = np_dir / constants.SRC_LINK

@@ -39,7 +39,7 @@ def main(env: Environment, pkg_name: str, checkout_to: str | None):
     logger.info("Checkout out package %s ...", pkg_name)
     with switch_cwd(np_dir):
         try:
-            der_payload = json.loads(
+            drv_payload = json.loads(
                 subprocess.check_output(
                     [
                         "nix",
@@ -49,29 +49,29 @@ def main(env: Environment, pkg_name: str, checkout_to: str | None):
                     ]
                 )
             )
-            if len(der_payload) != 1:
+            if len(drv_payload) != 1:
                 raise ValueError("Expected only one der in the payload")
-            der_path = pathlib.Path(list(der_payload.keys())[0])
-            der_json_file = pathlib.Path(constants.DER_JSON_FILE)
-            with der_json_file.open("wt") as fo:
-                json.dump(der_payload, fo)
+            drv_path = pathlib.Path(list(drv_payload.keys())[0])
+            drv_json_file = pathlib.Path(constants.DRV_JSON_FILE)
+            with drv_json_file.open("wt") as fo:
+                json.dump(drv_payload, fo)
         except subprocess.CalledProcessError:
             logger.error("Failed to fetch package der info %s", pkg_name)
             sys.exit(-1)
-        logger.info("Got package der path %s", der_path)
+        logger.info("Got package der path %s", drv_path)
 
-        logger.debug("Der payload: %r", der_payload)
-        src = der_payload[str(der_path)]["env"].get("src")
+        logger.debug("Der payload: %r", drv_payload)
+        src = drv_payload[str(drv_path)]["env"].get("src")
         logger.info("Source of the der %r", src)
 
-        logger.info("Realizing der %s ...", der_path)
+        logger.info("Realizing der %s ...", drv_path)
         subprocess.check_call(
             [
                 "nix-store",
                 "--realise",
                 "--add-root",
                 constants.PKG_LINK,
-                str(der_path),
+                str(drv_path),
             ]
         )
 
@@ -85,7 +85,7 @@ def main(env: Environment, pkg_name: str, checkout_to: str | None):
             ]
         )
         patch_files = []
-        patches = der_payload[str(der_path)]["env"].get("patches", "").strip()
+        patches = drv_payload[str(drv_path)]["env"].get("patches", "").strip()
         if patches:
             patch_files = patches.split(" ")
             logger.info("Found package patches %s, realizing ...", patch_files)

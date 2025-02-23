@@ -4,8 +4,8 @@ PLAYGROUND_DIR = ".nix-playground"
 # .nix-playground/pkg_name
 PKG_NAME = "pkg_name"
 # the filename of JSON dump from nix der file in the PLAYGROUND_DIR folder, like
-# .nix-playground/der.json
-DER_JSON_FILE = "der.json"
+# .nix-playground/drv.json
+DRV_JSON_FILE = "drv.json"
 # the filename of link to nix package in the PLAYGROUND_DIR folder, like
 # .nix-playground/pkg
 PKG_LINK = "pkg"
