@@ -11,9 +11,9 @@ from nix_playground.utils import switch_cwd
 @pytest.mark.parametrize(
     "pkg_name, checkout_dir_name",
     [
-        ("cowsay", None),
-        ("cowsay", "my_checkout"),
-        ("libnvidia-container", None),
+        ("nixpkgs#cowsay", None),
+        ("nixpkgs#cowsay", "my_checkout"),
+        ("nixpkgs#libnvidia-container", None),
     ],
 )
 def test_clean(
