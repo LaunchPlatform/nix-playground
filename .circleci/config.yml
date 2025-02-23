@@ -14,7 +14,9 @@ jobs:
       - run:
           name: Install deps
           command: |
-            nix-env -iA nixpkgs.python311 nixpkgs.uv
+            # enable flake
+            echo 'experimental-features = nix-command flakes' >> /etc/nix/nix.conf
+            nix profile install nixpkgs#python311 nicpkgs:uv
             uv sync
       - run:
           name: Run test
