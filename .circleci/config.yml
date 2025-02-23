@@ -4,6 +4,7 @@ version: 2.1
 
 orbs:
   python: circleci/python@2.1.1
+  nix: eld/nix@1.1.1
 
 jobs:
   test:
@@ -11,10 +12,10 @@ jobs:
       - image: cimg/python:3.11.11
     steps:
       - checkout
+      - nix/install
       - run:
           name: Install deps
           command: |
-            sh <(curl -L https://nixos.org/nix/install) --no-daemon
             curl -LsSf https://astral.sh/uv/install.sh | sh
             uv sync
       - run:
