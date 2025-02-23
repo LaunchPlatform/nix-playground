@@ -1,3 +1,50 @@
-def test_checkout():
-    # TODO: when I have more time...
-    pass
+import pathlib
+
+from click.testing import CliRunner
+
+from nix_playground import constants
+from nix_playground.main import cli
+from nix_playground.utils import switch_cwd
+
+
+def test_checkout(tmp_path: pathlib.Path, cli_runner: CliRunner):
+    cli_runner.mix_stderr = False
+    pkg_name = "nixpkgs#cowsay"
+    with switch_cwd(tmp_path):
+        result = cli_runner.invoke(cli, ["checkout", pkg_name])
+    assert result.exit_code == 0
+
+    np_dir = tmp_path / constants.PLAYGROUND_DIR
+    assert np_dir.exists()
+    pkg_name_file = np_dir / constants.PKG_NAME
+    assert pkg_name_file.read_text() == pkg_name
+
+    der_link = np_dir / constants.DER_LINK
+    assert der_link.exists()
+    pkg_link = np_dir / constants.PKG_LINK
+    assert pkg_link.exists()
+    src_link = np_dir / constants.SRC_LINK
+    assert src_link.exists()
+    checkout_link = np_dir / constants.CHECKOUT_LINK
+    assert checkout_link.exists()
+    assert checkout_link.readlink() == tmp_path / constants.DEFAULT_CHECKOUT_DIR
+
+    cowsay = checkout_link / "bin" / "cowsay"
+    assert cowsay.exists()
+
+
+def test_checkout_to_dir(tmp_path: pathlib.Path, cli_runner: CliRunner):
+    cli_runner.mix_stderr = False
+    pkg_name = "nixpkgs#cowsay"
+    checkout_dir = tmp_path / "my_checkout"
+    with switch_cwd(tmp_path):
+        result = cli_runner.invoke(cli, ["checkout", pkg_name, "-c", checkout_dir.name])
+    assert result.exit_code == 0
+
+    np_dir = tmp_path / constants.PLAYGROUND_DIR
+    checkout_link = np_dir / constants.CHECKOUT_LINK
+    assert checkout_link.exists()
+    assert checkout_link.readlink() == checkout_dir
+
+    cowsay = checkout_dir / "bin" / "cowsay"
+    assert cowsay.exists()
