@@ -1,9 +1,11 @@
 import contextlib
 import dataclasses
+import io
 import logging
 import os
 import pathlib
 import sys
+import tarfile
 import typing
 
 from . import constants
@@ -40,3 +42,12 @@ def ensure_np_dir() -> pathlib.Path:
         logger.info("No checkout found in the current folder")
         sys.exit(-1)
     return np_dir
+
+
+def extract_tar(input_file: io.BytesIO, mode: str = "r:gz"):
+    with tarfile.open(fileobj=input_file, mode="r:gz") as tar_file:
+        if hasattr(tarfile, "data_filter"):
+            tar_file.extractall(filter="data")
+        else:
+            logger.warning("Performing unsafe tar file extracting")
+            tar_file.extractall()

@@ -1,6 +1,7 @@
 import itertools
 import json
 import logging
+import mimetypes
 import os
 import pathlib
 import shutil
@@ -15,6 +16,7 @@ from . import constants
 from .cli import cli
 from .environment import Environment
 from .environment import pass_env
+from .utils import extract_tar
 from .utils import parse_pkg
 from .utils import switch_cwd
 
@@ -30,7 +32,7 @@ logger = logging.getLogger(__name__)
     help="Instead of building from traditional nix packages, treat the given PKG_NAME as "
     '"<FLAKE_PATH>#<ATTR_PATH>". and build the package at ATTR_PATH under "outputs" '
     "generated from the flake at FLAKE_PATH. "
-    'For example ".#my-pkg.x86_64-linux" will get "my-pkg.x86_64-linux" under "outputs" generated from'
+    'For example ".#my-pkg.x86_64-linux" will get "my-pkg.x86_64-linux" under "outputs" generated from '
     'flake in the current folder "."',
 )
 @click.option("-c", "--checkout-to", type=click.Path(exists=False, writable=True))
@@ -136,8 +138,22 @@ def main(env: Environment, pkg_name: str, flake: bool, checkout_to: str | None):
                 )
 
     logger.info("Checking out source code from %s to %s", src, checkout_dir)
-    shutil.copytree(src, str(checkout_dir))
-    checkout_dir.chmod(0o700)
+    src_path = pathlib.Path(src)
+    if src_path.is_dir():
+        shutil.copytree(src, str(checkout_dir))
+        checkout_dir.chmod(0o700)
+    else:
+        mime_type = mimetypes.guess_type(src_path)
+        if mime_type == ("application/x-tar", "gzip"):
+            logger.info("Extract tar.gz file %s into %s", src_path, checkout_dir)
+            checkout_dir.mkdir(exist_ok=True)
+            with src_path.open("rb") as fo, switch_cwd(checkout_dir):
+                extract_tar(fo)
+        # TODO: support other format
+        else:
+            logger.error("Unsupported src (%s) type, don't know how to handle", src)
+            sys.exit(-1)
+
     # make a link for the operation later
     checkout_link = np_dir / constants.CHECKOUT_LINK
     checkout_link.unlink(missing_ok=True)
