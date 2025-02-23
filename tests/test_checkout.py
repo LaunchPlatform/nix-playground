@@ -12,6 +12,7 @@ from nix_playground.utils import switch_cwd
     "pkg_name, expected_checkout_files",
     [
         ("nixpkgs#cowsay", [pathlib.Path("bin") / "cowsay"]),
+        ("nixpkgs#hello", [pathlib.Path("src") / "hello.c"]),
         ("nixpkgs#libnvidia-container", [pathlib.Path("src") / "cli" / "main.c"]),
     ],
 )
