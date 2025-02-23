@@ -71,55 +71,55 @@ def main(env: Environment):
     drv_payload["env"]["patches"] = " ".join(patches)
     drv_payload["inputSrcs"].append(patch_store_path)
 
-    # This is a hack, we expect the `nix derivation add` command to return an error like this:
-    #
-    #   error: derivation '/nix/store/k4lb25pvzr0magkpk04c1mw69ix73gnf-hello-2.12.1.drv' has incorrect output
-    #   '/nix/store/p09fxxwkdj69hk4mgddk4r3nassiryzc-hello-2.12.1',
-    #   should be '/nix/store/ja3hh4izqsjzq3rh8fxdqxw7vf56pw9m-hello-2.12.1'
-    #
-    # So that we can get the correct output path. Ideally we should somehow use this rewrite der function in the nix
-    # C++ code:
-    # https://github.com/NixOS/nix/blob/d904921eecbc17662fef67e8162bd3c7d1a54ce0/src/libstore/derivations.cc#L1032-L1051
-    # or read the source code to find how the exact hashing algorithm, but maybe next time ...
-    # TODO: improve this hack
-    logger.info("Computing correct output pathes")
-    proc = subprocess.run(
-        ["nix", "derivation", "add"],
-        input=json.dumps(drv_payload).encode("utf8"),
-        stderr=subprocess.PIPE,
-        check=False,
-    )
-    if proc.returncode == 0:
-        raise ValueError("Does not expect this command to work")
-
-    output_path_map = {
-        key: value
-        for key, value in INCORRECT_OUTPUT_REGEX.findall(proc.stderr.decode("utf8"))
-    }
-    logger.info("Got new output path map: %r", output_path_map)
-
-    # patch der..
-    outputs = drv_payload["outputs"]
-    for out_key, out_value in outputs.items():
-        out_path = out_value["path"]
-        outputs[out_key] = dict(path=output_path_map.get(out_path, out_path))
-    env_out = drv_payload["env"].get("out")
-    if env_out is not None and env_out:
-        output_paths = env_out.split(" ")
-        drv_payload["env"]["out"] = " ".join(
-            map(lambda p: output_path_map.get(p, p), output_paths)
-        )
-
-    # this time with output patch patched, it should work
-    output_drv = (
-        subprocess.check_output(
+    while True:
+        logger.info("Computing correct output pathes")
+        proc = subprocess.run(
             ["nix", "derivation", "add"],
             input=json.dumps(drv_payload).encode("utf8"),
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=False,
         )
-        .decode("utf8")
-        .strip()
-    )
-    logger.info("Added new derivation %s", output_drv)
+        if proc.returncode == 0:
+            output_drv = proc.stdout.decode("utf8").strip()
+            logger.info("Added new derivation %s", output_drv)
+            break
+
+        # This is a hack, we expect the `nix derivation add` command to return an error like this:
+        #
+        #   error: derivation '/nix/store/k4lb25pvzr0magkpk04c1mw69ix73gnf-hello-2.12.1.drv' has incorrect output
+        #   '/nix/store/p09fxxwkdj69hk4mgddk4r3nassiryzc-hello-2.12.1',
+        #   should be '/nix/store/ja3hh4izqsjzq3rh8fxdqxw7vf56pw9m-hello-2.12.1'
+        #
+        # So that we can get the correct output path. Ideally we should somehow use this rewrite der function in the nix
+        # C++ code:
+        # https://github.com/NixOS/nix/blob/d904921eecbc17662fef67e8162bd3c7d1a54ce0/src/libstore/derivations.cc#L1032-L1051
+        # or read the source code to find how the exact hashing algorithm, but maybe next time ...
+        # TODO: improve this hack
+        stderr = proc.stderr.decode("utf8")
+        output_path_map = {
+            key: value for key, value in INCORRECT_OUTPUT_REGEX.findall(stderr)
+        }
+        if not output_path_map:
+            logger.error("Failed to add patched derivation with error:\n%s", stderr)
+            raise ValueError("Failed to add derivation with error")
+        logger.info("Got new output path map: %r", output_path_map)
+
+        # patch der..
+        logger.info("Patching the original derivation %s", drv_path)
+        output_keys = drv_payload["env"]["outputs"].split(" ")
+        for output_key in output_keys:
+            outputs = drv_payload["outputs"]
+            for key, value in outputs.items():
+                out_path = value["path"]
+                outputs[key] = dict(path=output_path_map.get(out_path, out_path))
+            env_out = drv_payload["env"].get(output_key)
+            if env_out is not None and env_out:
+                output_paths = env_out.split(" ")
+                drv_payload["env"][output_key] = " ".join(
+                    map(lambda p: output_path_map.get(p, p), output_paths)
+                )
+        logger.debug("Patched derivation:\n%s", json.dumps(drv_payload))
 
     result_link = np_dir / constants.RESULT_LINK
     subprocess.check_call(
