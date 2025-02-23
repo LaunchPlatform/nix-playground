@@ -12,6 +12,9 @@ PKG_LINK = "pkg"
 # the filename of link to nix source code in the PLAYGROUND_DIR folder, like
 # .nix-playground/src
 SRC_LINK = "src"
+# the filename of link to nix build output in the PLAYGROUND_DIR folder, like
+# .nix-playground/result
+RESULT_LINK = "result"
 # the filename of link to checked out folder in PLAYGROUND_DIR folder, like
 # .nix-playground/checkout
 CHECKOUT_LINK = "checkout"

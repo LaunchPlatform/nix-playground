@@ -111,20 +111,30 @@ def main(env: Environment):
         )
 
     # this time with output patch patched, it should work
-    print(
+    output_drv = (
         subprocess.check_output(
             ["nix", "derivation", "add"],
             input=json.dumps(drv_payload).encode("utf8"),
         )
+        .decode("utf8")
+        .strip()
     )
-    # logger.debug("Running nix expr:\n%s", nix_expr)
-    # subprocess.check_call(
-    #     [
-    #         "nix",
-    #         "build",
-    #         "--impure",
-    #         "--expr",
-    #         nix_expr,
-    #     ]
-    # )
+    logger.info("Added new derivation %s", output_drv)
+
+    result_link = np_dir / constants.RESULT_LINK
+    subprocess.check_call(
+        ["nix-store", "--realize", "--add-root", str(result_link), output_drv],
+        stdout=subprocess.DEVNULL,
+    )
+
+    output_store_path = result_link.readlink()
+    logger.info("Realized derivation into %s", output_store_path)
+
+    subprocess.check_call(
+        [
+            "nix",
+            "build",
+            str(output_store_path),
+        ]
+    )
     logger.info("done")
