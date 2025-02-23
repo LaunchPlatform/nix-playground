@@ -40,6 +40,8 @@ def main(env: Environment, pkg_name: str, checkout_to: str | None):
     logger.info("Checkout out package %s ...", pkg_name)
     with switch_cwd(np_dir):
         try:
+            # TODO: do "nix derivation show nixpkgs#hello" instead,
+            #       it's much easier
             der_metadata = json.loads(
                 subprocess.check_output(
                     [
@@ -54,7 +56,6 @@ def main(env: Environment, pkg_name: str, checkout_to: str | None):
             der_path = list(der_metadata.keys())[0]
             # TODO: ideally should find a way to keep the derivation from gc?
         except subprocess.CalledProcessError:
-            raise
             logger.error("Failed to fetch package der info %s", pkg_name)
             sys.exit(-1)
         logger.info("Got package der path %s", der_path)
