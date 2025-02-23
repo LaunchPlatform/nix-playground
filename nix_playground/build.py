@@ -36,14 +36,18 @@ def main(env: Environment):
         for patch in repo.diff(cached=True):
             fo.write(patch.text)
     patch_path = np_dir / constants.PATCH_FILE
-    patch_store_path = subprocess.check_output(
-        [
-            "nix",
-            "store",
-            "add",
-            str(patch_path),
-        ]
-    ).decode("utf8")
+    patch_store_path = (
+        subprocess.check_output(
+            [
+                "nix",
+                "store",
+                "add",
+                str(patch_path),
+            ]
+        )
+        .decode("utf8")
+        .strip()
+    )
     logger.info("Added patch file to store as %s", patch_store_path)
 
     logger.info("Building nix package with patch")
@@ -64,8 +68,8 @@ def main(env: Environment):
     else:
         patches = []
     patches.append(patch_store_path)
-
     drv_payload["env"]["patches"] = " ".join(patches)
+    drv_payload["inputSrcs"].append(patch_store_path)
 
     # This is a hack, we expect the `nix derivation add` command to return an error like this:
     #
