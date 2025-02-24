@@ -39,9 +39,8 @@ def main(env: Environment):
     patch_store_path = (
         subprocess.check_output(
             [
-                "nix",
-                "store",
-                "add",
+                "nix-store",
+                "--add",
                 str(patch_path),
             ]
         )
