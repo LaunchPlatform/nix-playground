@@ -101,7 +101,6 @@ np checkout github:NixOS/nixpkgs/11415c7ae8539d6292f2928317ee7a8410b28bb9#libnvi
 
 ## Roadmap
 
-- [Publish it to nixpkgs](https://github.com/NixOS/nixpkgs/pull/384171), waiting for review
 - Implement `np shell` (like `nix-shell` but with the patches applied)
 - Support patching nested dependency package
 - Rewrite it with Rust? 🤔
