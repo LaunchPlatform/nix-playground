@@ -65,7 +65,7 @@ With the patch file, you can then apply it on the target package like this:
 ```nix
 with import <nixpkgs> {};
     libnvidia-container.overrideAttrs (oldAttrs: {
-        patches = (lib.attrsets.attrByPath ["patches"] [] oldAttrs) ++ [./bugfix.patch];
+        patches = oldAttrs.patches or [] ++ [./bugfix.patch];
     })
 ```
 
