@@ -14,6 +14,7 @@ from nix_playground.utils import switch_cwd
         ("nixpkgs#cowsay", [pathlib.Path("bin") / "cowsay"]),
         ("nixpkgs#hello", [pathlib.Path("src") / "hello.c"]),
         ("nixpkgs#libnvidia-container", [pathlib.Path("src") / "cli" / "main.c"]),
+        ("nixpkgs#platformio-core", [pathlib.Path("platformio") / "__main__.py"]),
     ],
 )
 def test_checkout(

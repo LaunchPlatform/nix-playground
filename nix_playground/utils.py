@@ -77,9 +77,9 @@ def apply_patch(
     #       report the issues and implement it if that's really needed
     if patch_file.suffix in {".gz", ".bz2", ".xz", ".lzma"}:
         logger.error(
-            "Currently compressed patch file is not supported yet, please see the issue https://github.com/LaunchPlatform/nix-playground/issues/FIXME to learn more"
+            "Currently compressed patch file is not supported yet, please see the issue https://github.com/LaunchPlatform/nix-playground/issues/5 to learn more"
         )
-        raise
+        sys.exit(-1)
 
     try:
         diff = pygit2.Diff.parse_diff(patch_file.read_bytes())
