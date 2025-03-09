@@ -4,6 +4,7 @@ import io
 import logging
 import os
 import pathlib
+import shutil
 import subprocess
 import sys
 import tarfile
@@ -89,6 +90,13 @@ def apply_patch(
             "Failed to patch with git, fall back to use patch command instead. Error: %s",
             exc,
         )
+        if shutil.which("patch") is None:
+            logger.error(
+                "The patch file %s is not a valid git patch, so we need to use the patch cmd but cannot "
+                "find it in the $PATH. Please install patch cmd and try again",
+                patch_file,
+            )
+            sys.exit(-1)
         subprocess.check_call(
             ["patch", "-f", "-i", str(patch_file), "-p1"], cwd=repo.workdir
         )
