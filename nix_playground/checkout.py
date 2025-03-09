@@ -16,6 +16,7 @@ from . import constants
 from .cli import cli
 from .environment import Environment
 from .environment import pass_env
+from .utils import apply_patch
 from .utils import extract_tar
 from .utils import switch_cwd
 
@@ -24,17 +25,21 @@ logger = logging.getLogger(__name__)
 
 @cli.command(name="checkout", help="Checkout nixpkgs source content locally")
 @click.argument("PKG_NAME", type=str)
-@click.option("-c", "--checkout-to", type=click.Path(exists=False, writable=True))
+@click.option(
+    "-c",
+    "--checkout-to",
+    type=click.Path(exists=False, writable=True),
+    default=constants.DEFAULT_CHECKOUT_DIR,
+    help="The folder to checkout the source code to.",
+    show_default=True,
+)
 @pass_env
-def main(env: Environment, pkg_name: str, checkout_to: str | None):
+def main(env: Environment, pkg_name: str, checkout_to: str):
     np_dir = pathlib.Path(constants.PLAYGROUND_DIR)
     np_dir.mkdir(exist_ok=True)
     (np_dir / constants.PKG_NAME).write_text(pkg_name)
 
-    if checkout_to is None:
-        checkout_dir = pathlib.Path(constants.DEFAULT_CHECKOUT_DIR)
-    else:
-        checkout_dir = pathlib.Path(checkout_to)
+    checkout_dir = pathlib.Path(checkout_to)
 
     logger.info("Checkout out package %s ...", pkg_name)
     with switch_cwd(np_dir):
@@ -164,8 +169,7 @@ def main(env: Environment, pkg_name: str, checkout_to: str | None):
             for patch_file in patch_files:
                 logger.info("Making a new commit from patch file %s", patch_file)
                 patch_file = pathlib.Path(patch_file)
-                diff = pygit2.Diff.parse_diff(patch_file.read_bytes())
-                repo.apply(diff)
+                apply_patch(repo=repo, patch_file=patch_file)
                 index = repo.index
                 index.add_all()
                 index.write()
