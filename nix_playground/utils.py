@@ -70,7 +70,6 @@ def extract_tar(
 def apply_patch(
     repo: pygit2.Repository,
     patch_file: pathlib.Path,
-    patch_bin: pathlib.Path | None = None,
 ):
     # TODO: ideally, we should support patch file in different formats, like what nixpkg's setup.sh provides.
     #       https://github.com/NixOS/nixpkgs/blob/09e25be882ef7751b2e4bbc3aa4e2df1c4613558/pkgs/stdenv/generic/setup.sh#L1386C1-L1400C13
@@ -82,18 +81,14 @@ def apply_patch(
         )
         raise
 
-    diff = pygit2.Diff.parse_diff(patch_file.read_bytes())
     try:
+        diff = pygit2.Diff.parse_diff(patch_file.read_bytes())
         repo.apply(diff)
     except pygit2.GitError as exc:
         logger.info(
             "Failed to patch with git, fall back to use patch command instead. Error: %s",
             exc,
         )
-        if patch_bin is None:
-            logger.error(
-                "Need to provide patch command line executable via --patch-bin or have it in the PATH"
-            )
-            sys.exit(-1)
-        with switch_cwd(repo.path):
-            subprocess.check_call([patch_bin, "-i", str(patch_file), "-p1"])
+        subprocess.check_call(
+            ["patch", "-f", "-i", str(patch_file), "-p1"], cwd=repo.workdir
+        )
