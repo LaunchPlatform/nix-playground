@@ -116,7 +116,7 @@ def main(env: Environment, pkg_name: str, checkout_to: str):
     logger.info("Checking out source code from %s to %s", src, checkout_dir)
     src_path = pathlib.Path(src)
     if src_path.is_dir():
-        shutil.copytree(src, str(checkout_dir))
+        shutil.copytree(src, str(checkout_dir), symlinks=True)
         checkout_dir.chmod(0o700)
     else:
         mime_type = mimetypes.guess_type(src_path)
